@@ -2,7 +2,6 @@ package preprocess
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -16,7 +15,7 @@ const splitSep = "CHAPTER "
 
 // SplitOriginalTxt is used for splitting the original txt by chapters; should only be used once.
 func SplitOriginalTxt() {
-	byt, err := ioutil.ReadFile(pathOriginal)
+	byt, err := os.ReadFile(pathOriginal)
 	if err != nil {
 		fmt.Println(err)
 		return
