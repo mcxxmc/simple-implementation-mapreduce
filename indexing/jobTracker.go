@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-type pair struct {
+type Pair struct {
 	Freq     int    `json:"freq"`
 	Filename string `json:"filename"`
 }
 
-func (p *pair) String() string {
+func (p *Pair) String() string {
 	return "[" + strconv.Itoa(p.Freq) + ", " + p.Filename + "]"
 }
 
@@ -25,7 +25,7 @@ type CompletedWork1 struct {
 // CompletedWork2 the type2 finished work, which is the inverted index for some files.
 type CompletedWork2 struct {
 	From     int
-	Inverted map[string][]*pair
+	Inverted map[string][]*Pair
 }
 
 // JobTracker the manager to allocate jobs. Use NewJobTracker() as the constructor.

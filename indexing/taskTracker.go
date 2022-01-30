@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -82,7 +83,7 @@ type TaskTracker2 struct {
 	Pending2  chan *CompletedWork2
 	Completed chan *CompletedWork2
 	Msg       chan string
-	Inverted  map[string][]*pair
+	Inverted  map[string][]*Pair
 	Id        int
 	Idle      bool
 	Alive 	  bool
@@ -119,11 +120,20 @@ func (tk2 *TaskTracker2) Run() {
 
 			case MsgClearingData:
 				fmt.Println("task tracker type2 is clearing its data, id: ", tk2.Id)
-				tk2.Inverted = make(map[string][]*pair)
+				tk2.Inverted = make(map[string][]*Pair)
 
 			case MsgSaveData2Disk:
 				fmt.Println("task tracker type2 is saving JSON to disk, id: ", tk2.Id)
-				b, err := json.Marshal(tk2.Inverted)
+
+				// sort the indexes
+				toSave := tk2.Inverted
+				for _, pairs := range toSave {
+					sort.Slice(pairs, func(i, j int) bool {
+						return pairs[i].Freq < pairs[j].Freq
+					})
+				}
+
+				b, err := json.Marshal(toSave)
 				if err != nil {
 					fmt.Println(err)
 				} else {
@@ -145,16 +155,16 @@ func (tk2 *TaskTracker2) invertAndCombine(filename string, data map[string]int) 
 	for word, freq := range data {
 		pairs, exist := tk2.Inverted[word]
 		if !exist {
-			pairs = make([]*pair, 0)
+			pairs = make([]*Pair, 0)
 		}
-		newPair := &pair{Filename: filename, Freq: freq}
+		newPair := &Pair{Filename: filename, Freq: freq}
 		pairs = append(pairs, newPair)
 		tk2.Inverted[word] = pairs
 	}
 }
 
 // absorbs a map of inverted index (unsorted).
-func (tk2 *TaskTracker2) union(m map[string][]*pair) {
+func (tk2 *TaskTracker2) union(m map[string][]*Pair) {
 	for word, newPairs := range m {
 		_, exist := tk2.Inverted[word]
 		if !exist {
@@ -172,6 +182,6 @@ func NewTaskTracker2(id int, completed chan *CompletedWork2) *TaskTracker2 {
 		Pending2: make(chan *CompletedWork2, channelSizeTaskTracker2),
 		Completed: completed,
 		Msg: make(chan string, channelTaskTracker2Msg),
-		Inverted: make(map[string][]*pair),
+		Inverted: make(map[string][]*Pair),
 	}
 }
